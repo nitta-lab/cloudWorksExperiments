@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<title>練習課題B</title>
+<meta charset="UTF-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<link rel="stylesheet" type="text/css" href="./prettify.css">
+</head>
+<body>
+<p>
+練習課題Bでは，ArgoUMLの選択機能と削除機能の間の依存関係について見ていきます．
+ArgoUMLでは，選択モード時にマウスクリックによって選択したクラスを，Delキーを用いて削除することができます．これは, ArgoUMLにおいて削除機能が選択機能に依存していることを意味しています．
+ここでは，選択機能で実行されるソースコードと削除機能で実行されるソースコードの中から, これらの間の依存関係に関係する部分を抜き出したものについて見ていきましょう．
+選択機能を実行すると．<code>ModeSelect</code>クラスの<code>mousePressed()</code>メソッド(以下，<code>ModeSelect#mousePressed()</code>のように書く)が最初に呼び出されます．
+一方，選択機能の実行後に削除機能を実行すると，<code>ActionRemoveFromDiagram#actionPerformed()</code>メソッドが最初に呼び出されます．
+まず，<code>ModeSelect</code>クラスおよびその親クラスの一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public class FigModifyingModeImpl extends ModeImpl implements FigModifyingMode {
+    protected Editor editor;
+}
+
+public class ModeSelect extends FigModifyingModeImpl {
+
+    public void mousePressed(MouseEvent me) {
+        SelectionManager sm = editor.getSelectionManager();
+        Fig underMouse = editor.hit(selectAnchor);
+        sm.select(underMouse);
+    }
+}
+</pre><p>
+また，<code>ActionRemoveFromDiagram</code>クラスの一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public class ActionRemoveFromDiagram extends AbstractAction {
+
+    public void actionPerformed(ActionEvent ae) {
+        Editor ce = Globals.curEditor();
+        List&lt;Fig&gt; figs = ce.getSelectionManager().getFigs();
+        for (Fig f : figs) {
+            f.removeFromDiagram();
+        }
+    }
+}
+</pre>
+<p>
+依存関係に関係するソースコードはこれ以外にもあります．抜き出したコード全体については下記のリンク先をご参照ください．
+ここで，<code>ModeSelect</code>クラス9行目の変数 <code>underMouse</code> にはクリックしたクラス（図形オブジェクト）への参照が代入されています．
+また，<code>ActionRemoveFromDiagram</code>クラス7行目の変数 <code>f</code> には削除されるクラス（図形オブジェクト）への参照が代入されます．
+このとき，クリックしたクラスが正しく削除されるには，<code>underMouse</code> と同じ値が <code>f</code> に1度は代入される
+（すなわち，<code>underMouse</code> と <code>f</code> が同じオブジェクトを参照する）必要があることがわかります．
+そこで，
+<blockquote>
+なぜ，<code>underMouse</code> と同じ値が <code>f</code> に必ず代入されるのか？
+</blockquote>
+について，以下のソースコードを読んで理解することを試みてください．
+なお，実際の課題では自動抽出によって抜き出されたソースコードを用いるため，理解するのに必要なソースコードが十分に提示されない可能性があることにご注意ください．
+またアンケートで，ソースコードの読解に要したおおよその時間（5分単位程度）をお答えいただきたいため，開始時刻を確認してから読解を始めてください．
+</p>
+<p><a href="SampleB-code1.html" target="_blank">選択機能で実行されるソースコード（一部）</a></p>
+<p><a href="SampleB-code2.html" target="_blank">削除機能で実行されるソースコード（一部）</a></p>
+ソースコードを読み終えたら，以下のアンケートへのご回答をお願いいたします．
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSfzGFTjc8AWoJjXhhub9_dKCBLgluyKa0aCG6pCpBUKS5PT0A/viewform?usp=sf_link" target="_blank">アンケート回答</a>
+<p style="margin-bottom:2em;"></p>
+<a href="ProblemB1.html">次へ</a>
+</body>

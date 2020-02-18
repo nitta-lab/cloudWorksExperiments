@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<title>課題A1</title>
+<meta charset="UTF-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<link rel="stylesheet" type="text/css" href="./prettify.css">
+</head>
+<body>
+<p>
+課題A1では，ArgoUMLのクラス配置機能と選択機能の間の依存関係について見ていきます．
+ArgoUMLでは，クラス配置モード時にマウスクリックしてクラス図上に配置したクラスを，クリックして選択状態にすることができます．これは, ArgoUMLにおいて選択機能がクラス配置機能に依存していることを意味しています．
+ここでは，クラス配置機能で実行されるソースコードと選択機能で実行されるソースコードの中から, これらの間の依存関係に関係する部分を，ある自動抽出技術を用いて抜き出したものについて見ていきましょう．
+クラス配置機能を実行すると．<code>ModePlace</code>クラスの<code>mousePressed()</code>メソッド(以下，<code>ModePlace#mousePressed()</code>のように書く)が最初に呼び出されます．
+一方，クラス配置機能の実行後に選択機能を実行すると，<code>ModeSelect#mousePressed()</code>メソッドが最初に呼び出されます．
+まず，<code>ModePlace</code>クラス，その親クラスおよび呼び出し先クラスの一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public class FigModifyingModeImpl extends ModeImpl implements FigModifyingMode {
+    protected Editor editor;
+}
+
+public class ModePlace extends FigModifyingModeImpl {
+
+    public void mousePressed(MouseEvent me) {
+        editor = Globals.curEditor();
+        GraphNodeRenderer renderer = editor.getGraphNodeRenderer();
+        Layer lay = editor.getLayerManager().getActiveLayer();
+        _pers = renderer.<a href="#getFigNodeFor" name="rgetFigNodeFor">getFigNodeFor(gm, lay, _node, null)</a>;
+    }
+}
+</pre><p>
+<pre class="prettyprint linenums lang-java">
+public abstract class UmlDiagramRenderer
+    implements GraphNodeRenderer, GraphEdgeRenderer {
+}
+
+public class ClassDiagramRenderer extends UmlDiagramRenderer {
+
+    public FigNode <a name="getFigNodeFor">getFigNodeFor(GraphModel gm, Layer lay,
+				 Object node, Map styleAttributes)</a> {
+        FigNodeModelElement figNode;
+        figNode = (FigNodeModelElement) ((UMLDiagram) diag)
+                .drop(node, null);
+        lay.add(figNode);
+    } <a href="#rgetFigNodeFor">//呼び出し元に戻る</a>
+}
+</pre>
+また，<code>ModeSelect</code>クラスおよびその親クラスの一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public class FigModifyingModeImpl extends ModeImpl implements FigModifyingMode {
+    protected Editor editor;
+}
+
+public class ModeSelect extends FigModifyingModeImpl {
+    private Point selectAnchor;
+
+    public void mousePressed(MouseEvent me) {
+        Fig underMouse = editor.hit(selectAnchor);
+    }
+}
+</pre>
+<p>
+自動抽出されたソースコードはこれ以外にもあります．抽出コード全体については下記のリンク先をご参照ください．
+ここで，<code>ClassDiagramRenderer</code>クラス10行目の変数 <code>figNode</code> にはこれから配置するクラス（図形オブジェクト）への参照が代入されています．
+また，<code>ModeSelct</code>クラス9行目の変数 <code>underMouse</code> には選択モード時にクリックされたクラス（図形オブジェクト）への参照が代入されます．
+このとき，配置したクラスが正しく選択されるには，<code>figNode</code> と同じ値が <code>underMouse</code> に代入される
+（すなわち，<code>underMouse</code> と <code>f</code> が同じオブジェクトを参照する）必要があることがわかります．
+そこで，
+<blockquote>
+なぜ，<code>figNode</code> と同じ値が <code>underMouse</code> に必ず代入されるのか？
+</blockquote>
+について，以下の自動抽出されたソースコードを読んで理解できるどうかについて、以下のアンケートでお答えください．
+アンケートでは，ソースコードの読解に要したおおよその時間（5分単位程度）もお答えいただくため，開始時刻を確認してから読解を始めてください．
+</p>
+<p><a href="ProblemA1-code1.html" target="_blank">クラス配置機能で実行されるソースコード（一部）</a></p>
+<p><a href="ProblemA1-code2.html" target="_blank">選択機能で実行されるソースコード（一部）</a></p>
+ソースコードを読み終えたら，以下のアンケートへのご回答をお願いいたします．
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSfxRdhSSwP26kSn6vgt0InA-fPwP8_-lom3Go27ZqnddgKBzQ/viewform?usp=sf_link" target="_blank">アンケート回答</a>
+<p style="margin-bottom:2em;"></p>
+<a href="Description-jEdit-A.html">次へ</a>
+</body>

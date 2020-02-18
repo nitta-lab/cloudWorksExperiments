@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<title>課題A4</title>
+<meta charset="UTF-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<link rel="stylesheet" type="text/css" href="./prettify.css">
+</head>
+<body>
+<p>
+課題A4では，JHotDrawの矩形配置機能と図形選択機能の間の依存関係について見ていきます．
+JHotDrawでは，矩形配置モード時にマウスクリックして図面上に配置した矩形を，クリックして選択状態にすることができます．これは, JHotDrawにおいて図形選択機能が矩形配置機能に依存していることを意味しています．
+ここでは，矩形配置機能で実行されるソースコードと図形選択機能で実行されるソースコードの中から, これらの間の依存関係に関係する部分を，ある自動抽出技術を用いて抜き出したものについて見ていきましょう．
+矩形配置機能を実行すると．<code>CreationTool</code>クラスの<code>mousePressed()</code>メソッド(以下，<code>CreationTool#mousePressed()</code>のように書く)が最初に呼び出されます．
+一方，矩形配置機能の実行後に図形選択機能を実行すると，<code>SelectionTool#mousePressed()</code>メソッドが最初に呼び出されます．
+まず，<code>CreationTool</code>クラスの一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public class CreationTool extends AbstractTool {
+    protected Figure createdFigure;
+
+    public void mousePressed(MouseEvent evt) {
+        createdFigure = createFigure();
+        getDrawing().add(createdFigure);
+    }
+}
+</pre>
+また，<code>SelectionTool</code>クラスとその親クラスの一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public abstract class AbstractTool extends AbstractBean implements Tool {
+    protected Point anchor;
+}
+
+public class SelectionTool extends AbstractTool {
+
+    public void mousePressed(MouseEvent evt) {
+        DrawingView view;
+        Figure figure;
+        figure = view.findFigure(anchor)</a>;
+    }
+}
+</pre>
+<p>
+自動抽出されたソースコードはこれ以外にもあります．抽出コード全体については下記のリンク先をご参照ください．
+ここで，<code>CreationTool</code>クラス5行目の変数 <code>createdFigure</code> にはこれから配置する矩形(図形)オブジェクトへの参照が代入されています．
+また，<code>SelectionTool</code>クラス10行目の変数 <code>figure</code> には選択モード時にクリックされた図形オブジェクトへの参照が代入されます．
+このとき，配置した矩形が正しく選択されるには，<code>createdFigure</code> と同じ値が <code>figure</code> に代入される
+（すなわち，<code>createdFigure</code> と <code>figure</code> が同じオブジェクトを参照する）必要があることがわかります．
+そこで，
+<blockquote>
+なぜ，<code>createdFigure</code> と同じ値が <code>figure</code> に必ず代入されるのか？
+</blockquote>
+について，以下の自動抽出されたソースコードを読んで理解できるどうかについて、以下のアンケートでお答えください．
+アンケートでは，ソースコードの読解に要したおおよその時間（5分単位程度）もお答えいただくため，開始時刻を確認してから読解を始めてください．
+</p>
+<p><a href="ProblemA4-code1.html" target="_blank">矩形配置機能で実行されるソースコード（一部）</a></p>
+<p><a href="ProblemA4-code2.html" target="_blank">図形選択機能で実行されるソースコード（一部）</a></p>
+ソースコードを読み終えたら，以下のアンケートへのご回答をお願いいたします．
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSeBJs0ZZdlAszxztjWG7JOH5pbt9dvI0_Jfc6qgD7p78a6cvA/viewform?usp=sf_link" target="_blank">アンケート回答</a>
+<p style="margin-bottom:2em;"></p>
+<a href="hogehoge.html">次へ</a>
+</body>

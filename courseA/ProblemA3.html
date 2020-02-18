@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<title>課題A3</title>
+<meta charset="UTF-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<link rel="stylesheet" type="text/css" href="./prettify.css">
+</head>
+<body>
+<p>
+課題A3では，JHotDrawの図形選択機能と図形移動機能の間の依存関係について見ていきます．
+JHotDrawでは，選択モード時にマウスクリックして選択状態にした図形を，ドラッグして任意の位置に移動することができます．これは, JHotDrawにおいて図形移動機能が図形選択機能に依存していることを意味しています．
+ここでは，図形選択機能で実行されるソースコードと図形移動機能で実行されるソースコードの中から, これらの間の依存関係に関係する部分を，ある自動抽出技術を用いて抜き出したものについて見ていきましょう．
+図形選択機能を実行すると．<code>SelectionTool</code>クラスの<code>mousePressed()</code>メソッド(以下，<code>SelectionTool#mousePressed()</code>のように書く)が最初に呼び出されます．
+一方，図形選択機能の実行後に図形移動機能を実行すると，マウスボタン押下時に<code>SelectionTool#mousePressed()</code>メソッドが呼び出された後，マウスドラッグ中に<code>SelectionTool#mouseDragged()</code>メソッドが繰り返し呼び出されます．
+まず，<code>SelectionTool</code>クラスとその親クラスの図形選択機能に関係する部分を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public abstract class AbstractTool extends AbstractBean implements Tool {
+    protected DrawingEditor editor;
+    protected Point anchor;
+
+    protected DrawingView <a name="getView">getView()</a><a name="getView2"></a> {
+        return editor.<a href="#getActiveView" name="rgetActiveView">getActiveView()</a>;
+    } <a href="#rgetView">//呼び出し元(SelectionToolクラス15行目)に戻る</a>
+}
+
+public class SelectionTool extends AbstractTool {
+    private Tool tracker;
+    private DragTracker dragTracker;
+
+    public void mousePressed(MouseEvent evt) {
+        DrawingView view = <a href="#getView" name="rgetView">getView()</a>;
+        Tool newTracker;
+        Figure figure;
+        figure = view.findFigure(anchor);
+        newTracker = <a href="#getDragTracker" name="rgetDragTracker">getDragTracker(figure)</a>;
+        <a href="#setTracker" name="rsetTracker">setTracker(newTracker)</a>;
+        tracker.<a href="#mousePressed" name="rmousePressed">mousePressed(evt)</a>;
+    }
+}
+</pre>
+また，<code>SelectionTool</code>クラスとその親クラス，およびその呼び出し先クラスの図形移動機能に関係する部分を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public abstract class AbstractTool extends AbstractBean implements Tool {
+    protected DrawingEditor editor;
+    protected Point anchor;
+
+    protected DrawingView <a name="getView">getView()</a> {
+        return editor.<a href="#getActiveView" name="rgetActiveView">getActiveView()</a>;
+    } <a href="#rgetView">//呼び出し元に戻る</a>
+}
+
+public class SelectionTool extends AbstractTool {
+    private Tool tracker;
+
+    public void mouseDragged(MouseEvent evt) {
+        tracker.<a href="#mouseDragged" name="rmouseDragged">mouseDragged(evt)</a>;
+    }
+
+    public void mousePressed(MouseEvent evt) {
+        Tool newTracker;
+        Figure figure;
+        newTracker = <a href="#getDragTracker" name="rgetDragTracker">getDragTracker(figure)</a>;
+        <a href="#setTracker" name="rsetTracker">setTracker(newTracker)</a>;
+        tracker.<a href="#mousePressed" name="rmousePressed">mousePressed(evt)</a>;
+    }
+
+    protected void <a name="setTracker">setTracker(Tool newTracker)</a> {
+        tracker = newTracker;
+    } <a href="#rsetTracker">//呼び出し元に戻る</a>
+
+    protected DragTracker <a name="getDragTracker">getDragTracker(Figure f)</a> {
+        dragTracker = new DefaultDragTracker();
+        return dragTracker;
+    } <a href="#rgetDragTracker">//呼び出し元に戻る</a>
+}
+
+public class DefaultDragTracker extends AbstractTool implements DragTracker {
+    private HashSet&lt;Figure&gt; transformedFigures;
+
+    public void <a name="mousePressed">mousePressed(MouseEvent evt)</a> {
+        DrawingView view = <a href="#getView" name="rgetView">getView()</a>;
+        transformedFigures = new HashSet&lt;Figure&gt;();
+        for (Figure f &#58; view.<a href="#getSelectedFigures" name="rgetSelectedFigures">getSelectedFigures()</a>) {
+            transformedFigures.add(f);
+        } <a href="#rmousePressed">//呼び出し元に戻る</a>
+    }
+
+    public void <a name="mouseDragged">mouseDragged(MouseEvent evt)</a> {
+        AffineTransform tx;
+        for (Figure f &#58; transformedFigures) {
+            f.transform(tx);
+        }
+    } <a href="#rmouseDragged">//呼び出し元に戻る</a>
+}
+</pre>
+<p>
+自動抽出されたソースコードはこれ以外にもあります．抽出コード全体については下記のリンク先をご参照ください．
+ここで，<code>SelectionTool</code>クラス18行目の変数 <code>figure</code> には選択した図形を表すオブジェクトへの参照が代入されています．
+また，<code>DefaultDragTracker</code>クラス48行目の変数 <code>f</code> には移動対象となる図形を表すオブジェクトへの参照が代入されます．
+このとき，選択した図形が正しく移動されるには，<code>figure</code> と同じ値が <code>f</code> に1度は代入される
+（すなわち，<code>figure</code> と <code>f</code> が同じオブジェクトを参照する）必要があることがわかります．
+そこで，
+<blockquote>
+なぜ，<code>figure</code> と同じ値が <code>f</code> に必ず代入されるのか？
+</blockquote>
+について，以下の自動抽出されたソースコードを読んで理解できるどうかについて、以下のアンケートでお答えください．
+アンケートでは，ソースコードの読解に要したおおよその時間（5分単位程度）もお答えいただくため，開始時刻を確認してから読解を始めてください．
+</p>
+<p><a href="ProblemA3-code1.html" target="_blank">図形選択機能で実行されるソースコード（一部）</a></p>
+<p><a href="ProblemA3-code2.html" target="_blank">図形移動機能で実行されるソースコード（一部）</a></p>
+ソースコードを読み終えたら，以下のアンケートへのご回答をお願いいたします．
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSctBM7gIjDtDh_qPOLeQwu9MUUtYEltWQ1WvMP9UB5Wk7Gcgg/viewform?usp=sf_link" target="_blank">アンケート回答</a>
+<p style="margin-bottom:2em;"></p>
+<a href="ProblemA4.html">次へ</a>
+</body>

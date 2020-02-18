@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<title>課題A2</title>
+<meta charset="UTF-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<link rel="stylesheet" type="text/css" href="./prettify.css">
+</head>
+<body>
+<p>
+課題A2では，jEditの文字選択機能と文字削除機能の間の依存関係について見ていきます．
+jEditでは，マウスドラッグして選択状態にした文字列を，Delキーで削除することができます．これは, jEditにおいて文字削除機能が文字選択機能に依存していることを意味しています．
+ここでは，文字選択機能で実行されるソースコードと文字削除機能で実行されるソースコードの中から, これらの間の依存関係に関係する部分を，ある自動抽出技術を用いて抜き出したものについて見ていきましょう．
+文字選択機能を実行すると．<code>TextAreaMouseHandler</code>クラスの<code>mouseDragged()</code>メソッド(以下，<code>TextAreaMouseHandler#mouseDragged()</code>のように書く)が最初に呼び出されます．
+一方，文字選択機能の実行後に文字削除機能を実行すると，<code>TextArea#delete()</code>メソッドが呼び出されます．
+まず，<code>TextAreaMouseHandle</code>クラスおよびその一連の呼び出し先クラス群の一部を以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public class TextAreaMouseHandler extends MouseInputAdapter
+{
+	public void mouseDragged(MouseEvent evt)
+	{
+		<a href="#doSingleDrag" name="rdoSingleDrag">doSingleDrag(evt)</a>;
+	}
+
+	private void <a name="doSingleDrag">doSingleDrag(MouseEvent evt)</a>
+	{
+		textArea.<a href="#resizeSelection" name="rresizeSelection">resizeSelection(dragStart,dot,extraEndVirt,
+			textArea.isRectangularSelectionEnabled()
+			|| (control && ctrlForRectangularSelection))</a>;
+	} <a href="#rdoSingleDrag">//呼び出し元に戻る</a>
+
+	protected final TextArea textArea;
+}
+</pre>    
+<pre class="prettyprint linenums lang-java">
+public abstract class TextArea extends JComponent
+{
+	public void <a name="resizeSelection">resizeSelection(int offset, int end, int extraEndVirt,
+		boolean rect)</a>
+	{
+		selectionManager.<a href="#resizeSelection2" name="rresizeSelection2">resizeSelection(offset,end,extraEndVirt,rect)</a>;
+	} <a href="#rresizeSelection">//呼び出し元に戻る</a>
+
+	final SelectionManager selectionManager;
+}
+
+</pre>
+<pre class="prettyprint linenums lang-java">
+class SelectionManager
+{
+	List&lt;Selection&gt; selection;
+
+	void <a name="addToSelection">addToSelection(Selection addMe)</a>
+	{
+		selection.add(addMe);
+	} <a href="#raddToSelection">//呼び出し元に戻る</a>
+
+	void <a name="resizeSelection2">resizeSelection(int offset, int end, int extraEndVirt,
+		boolean rect)</a>
+	{
+		Selection newSel;
+		newSel = new Selection.Range(offset,end);
+		<a href="#addToSelection" name="raddToSelection">addToSelection(newSel)</a>;
+	} <a href="#rresizeSelection2">//呼び出し元に戻る</a>
+}
+</pre>
+また，<code>TextArea</code>クラスを以下に示します．
+</p>
+<pre class="prettyprint linenums lang-java">
+public abstract class TextArea extends JComponent
+{
+
+	private void delete(boolean forward)
+	{
+		int i;
+		Selection s = selections[i];
+		setSelectedText(s,null);
+	}
+}
+</pre>
+<p>
+自動抽出されたソースコードはこれ以外にもあります．抽出コード全体については下記のリンク先をご参照ください．
+ここで，<code>SelectionManager</code>クラス14行目の変数 <code>newSel</code> にはマウスで選択した範囲を表すオブジェクトへの参照が代入されています．
+また，<code>TextArea</code>クラス7行目の変数 <code>s</code> には削除対象となる選択範囲を表すオブジェクトへの参照が代入されます．
+このとき，選択した文字列が正しく削除されるには，<code>newSel</code> と同じ値が <code>s</code> に1度は代入される
+（すなわち，<code>newSel</code> と <code>s</code> が同じオブジェクトを参照する）必要があることがわかります．
+そこで，
+<blockquote>
+なぜ，<code>newSel</code> と同じ値が <code>s</code> に必ず代入されるのか？
+</blockquote>
+について，以下の自動抽出されたソースコードを読んで理解できるどうかについて、以下のアンケートでお答えください．
+アンケートでは，ソースコードの読解に要したおおよその時間（5分単位程度）もお答えいただくため，開始時刻を確認してから読解を始めてください．
+</p>
+<p><a href="ProblemA2-code1.html" target="_blank">文字選択機能で実行されるソースコード（一部）</a></p>
+<p><a href="ProblemA2-code2.html" target="_blank">文字削除機能で実行されるソースコード（一部）</a></p>
+ソースコードを読み終えたら，以下のアンケートへのご回答をお願いいたします．
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSeNE6lk5_vJBvfEXeLDVK4Zcx04lf7RcAvw9OGeRqo0zfSQUQ/viewform?usp=sf_link" target="_blank">アンケート回答</a>
+<p style="margin-bottom:2em;"></p>
+<a href="Description-JHotDraw-A.html">次へ</a>
+</body>
