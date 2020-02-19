@@ -21,7 +21,7 @@ public abstract class AbstractTool extends AbstractBean implements Tool {
     protected Point anchor;
 
     protected DrawingView <a name="getView">getView()</a><a name="getView2"></a> {
-        return editor.<a href="#getActiveView" name="rgetActiveView">getActiveView()</a>;
+        return editor.getActiveView();
     } <a href="#rgetView">//呼び出し元(SelectionToolクラス15行目)に戻る</a>
 }
 
@@ -34,12 +34,13 @@ public class SelectionTool extends AbstractTool {
         Tool newTracker;
         Figure figure;
         figure = view.findFigure(anchor);
-        newTracker = <a href="#getDragTracker" name="rgetDragTracker">getDragTracker(figure)</a>;
-        <a href="#setTracker" name="rsetTracker">setTracker(newTracker)</a>;
-        tracker.<a href="#mousePressed" name="rmousePressed">mousePressed(evt)</a>;
+        newTracker = getDragTracker(figure);
+        setTracker(newTracker);
+        tracker.mousePressed(evt);
     }
 }
 </pre>
+<p>    
 また，<code>SelectionTool</code>クラスとその親クラス，およびその呼び出し先クラスの図形移動機能に関係する部分を以下に示します．
 </p>
 <pre class="prettyprint linenums lang-java">
@@ -47,9 +48,9 @@ public abstract class AbstractTool extends AbstractBean implements Tool {
     protected DrawingEditor editor;
     protected Point anchor;
 
-    protected DrawingView <a name="getView">getView()</a> {
-        return editor.<a href="#getActiveView" name="rgetActiveView">getActiveView()</a>;
-    } <a href="#rgetView">//呼び出し元に戻る</a>
+    protected DrawingView <a name="getView01">getView()</a> {
+        return editor.getActiveView();
+    } <a href="#rgetView01">//呼び出し元に戻る</a>
 }
 
 public class SelectionTool extends AbstractTool {
@@ -81,9 +82,9 @@ public class DefaultDragTracker extends AbstractTool implements DragTracker {
     private HashSet&lt;Figure&gt; transformedFigures;
 
     public void <a name="mousePressed">mousePressed(MouseEvent evt)</a> {
-        DrawingView view = <a href="#getView" name="rgetView">getView()</a>;
+        DrawingView view = <a href="#getView01" name="rgetView01">getView()</a>;
         transformedFigures = new HashSet&lt;Figure&gt;();
-        for (Figure f &#58; view.<a href="#getSelectedFigures" name="rgetSelectedFigures">getSelectedFigures()</a>) {
+        for (Figure f &#58; view.getSelectedFigures()) {
             transformedFigures.add(f);
         } <a href="#rmousePressed">//呼び出し元に戻る</a>
     }
