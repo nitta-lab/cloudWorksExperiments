@@ -98,8 +98,8 @@ public class DefaultDragTracker extends AbstractTool implements DragTracker {
 </pre>
 <p>
 自動抽出されたソースコードはこれ以外にもあります．抽出コード全体については下記のリンク先をご参照ください．
-ここで，<code>SelectionTool</code>クラス18行目の変数 <code>figure</code> には選択した図形を表すオブジェクトへの参照が代入されています．
-また，<code>DefaultDragTracker</code>クラス48行目の変数 <code>f</code> には移動対象となる図形を表すオブジェクトへの参照が代入されます．
+ここで，<code>SelectionTool</code>クラス18行目の変数 <code>figure</code> には選択された図形オブジェクトへの参照が代入されています．
+また，<code>DefaultDragTracker</code>クラス48行目の変数 <code>f</code> にはこれから移動する図形オブジェクトへの参照が代入されます．
 このとき，選択した図形が正しく移動されるには，<code>figure</code> と同じ値が <code>f</code> に1度は代入される
 （すなわち，<code>figure</code> と <code>f</code> が同じオブジェクトを参照する）必要があることがわかります．
 そこで，
